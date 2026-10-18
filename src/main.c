@@ -1,24 +1,30 @@
-/*
-Raylib example file.
-This is an example main file for a simple raylib project.
-Use this as a starting point or replace it with your code.
-
-by Jeffery Myers is marked with CC0 1.0. To view a copy of this license, visit https://creativecommons.org/publicdomain/zero/1.0/
-
-*/
-
-#include "raylib.h"
+#include <stdio.h>
+#include <raylib.h>
+#include <stdlib.h>
+#include "game.h"
 #include "funcs.h"
 #include "resource_dir.h"	// utility header for SearchAndSetResourceDir
 
-#include <stdio.h>
+#define SCREEN_WIDTH  800
+#define SCREEN_HEIGHT 450
 
-#define SCREEN_WIDTH 900
-#define SCREEN_HEIGHT 900
+#define TARGET_FPS 60
 
-int main ()
+#define TAM_FONT 30
+#define TAM_FONT_BIG 60
+
+int main()
 {
+
+	InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "donkey kong");
+	int current_screen = TITLE;
 	
+	TraceLog(LOG_INFO, "%s", "INITIALIZED WINDOW");
+
+	Player *player = makePlayer(SCREEN_WIDTH / 2.0, SCREEN_HEIGHT / 2.0);
+	int quit = 0;
+	int pause = 0;
+
 	char **map;
  
 	Vector2 map_res;
@@ -30,21 +36,18 @@ int main ()
 	// Tell the window to use vsync and work on high DPI displays
 	SetConfigFlags(FLAG_VSYNC_HINT | FLAG_WINDOW_HIGHDPI);
 
-	// Create the window and OpenGL context
-	InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Hello Raylib");
-
 	// Utility function from resource_dir.h to find the resources folder and set it as the current working directory so we can load from it
 	SearchAndSetResourceDir("resources");
 	
-	SetTargetFPS(120);
+	SetTargetFPS(TARGET_FPS);
 
-	Vector2 player_pos = { (float)SCREEN_WIDTH / 2, (float)SCREEN_HEIGHT / 2};
-	const float player_speed = 200;
+	Vector2 player_pos = { player->x, player->y};
+	const float player_speed = 0.02;
 
 	RenderTexture2D map_texture = LoadRenderTexture(SCREEN_WIDTH, SCREEN_HEIGHT);
 
 	BeginTextureMode(map_texture);
-		ClearBackground(BLACK);
+		ClearBackground(RAYWHITE);
 
 		for (int y = 0; y < map_res.y; y++){
 					for (int x = 0; x < map_res.x; x++){
@@ -92,40 +95,51 @@ int main ()
 
 	Rectangle* rects = create_collisions(map, (Vector2){SCREEN_WIDTH / map_res.x, SCREEN_HEIGHT/map_res.y});
 
-	Rectangle player = {player_pos.x, player_pos.y, SCREEN_WIDTH/map_res.x, SCREEN_HEIGHT/map_res.y};
-
-	// game loop
-	while (!WindowShouldClose())		// run the loop until the user presses ESCAPE or presses the Close button on the window
-	{
-		
-		
-		float delta_time = GetFrameTime();
+	Rectangle playerRect = {player_pos.x, player_pos.y, SCREEN_WIDTH/map_res.x, SCREEN_HEIGHT/map_res.y};
 
 
-		if (IsKeyDown(KEY_RIGHT)) player.x += player_speed * delta_time;
-		if (IsKeyDown(KEY_LEFT)) player.x -= player_speed * delta_time;
-		if (IsKeyDown(KEY_UP)) player.y -= player_speed * delta_time;
-		if (IsKeyDown(KEY_DOWN)) player.y += player_speed * delta_time;
-
-		if (CheckCollisionRecs(player, rects[0])){
-			printf("Colisao!!");
-		}
-		
-		// drawing
+	while (!quit && !WindowShouldClose()) {
 		BeginDrawing();
+		ClearBackground(RAYWHITE);
+		switch (current_screen) {
+			case TITLE:
+				handleScreenSelection(&current_screen);
+				drawMenu();
+				break;
+			case GAMEPLAY:
+				if (IsKeyPressed(KEY_SPACE)) {
+					pause = !pause;
+				}
+				if (!pause) {
+					handlePlayerMovement(player);
+					if (player->x >= (GetScreenWidth() - player->width)) player->x -= 0.02;
+					if (player->y >= (GetScreenHeight() - player->height)) player->y -= 0.02;
+					if (player->x <= player->width) player->x += 0.02;
+					if (player->y <= player->height) player->y += 0.02;
+					drawPlayer(*player);
 
-		// Setup the back buffer for drawing (clear color and depth buffers)
-		ClearBackground(BLACK);
+					if (CheckCollisionRecs(playerRect, rects[0])){
+						printf("Colisao!!");
+					}
+					
+					DrawTextureRec(map_texture.texture,  (Rectangle){ 0, 0, (float)map_texture.texture.width, -(float)map_texture.texture.height }, (Vector2){ 0, 0 }, WHITE);	
+				
 
-		DrawTextureRec(map_texture.texture,  (Rectangle){ 0, 0, (float)map_texture.texture.width, -(float)map_texture.texture.height }, (Vector2){ 0, 0 }, WHITE);	
-
-		DrawRectangleRec(player, PINK);
-	
-		// end the frame and get ready for the next one  (display frame, poll input, etc...)
+				} else {
+					char pause_msg[] = "GAME PAUSED";
+					double pause_msg_size = MeasureText(pause_msg, TAM_FONT_BIG);
+					DrawText(pause_msg, (SCREEN_WIDTH - pause_msg_size) / 2.0, (SCREEN_HEIGHT)/2.0 - 100, TAM_FONT_BIG, MAROON);
+				}
+				break;
+			case QUIT:
+				quit = 1;
+				break;
+		}
 		EndDrawing();
 	}
+	free(player);
 
-	// destroy the window and cleanup the OpenGL context
 	CloseWindow();
+
 	return 0;
 }
