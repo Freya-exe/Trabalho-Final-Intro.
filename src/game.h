@@ -1,3 +1,5 @@
+#include <raylib.h>
+
 #ifndef GAME_H
 #define GAME_H
 typedef struct player {
@@ -5,6 +7,7 @@ typedef struct player {
 	double y;
 	double width;
 	double height;
+	Vector2 velocity;
 	int can_climb;
 } Player;
 

@@ -42,7 +42,6 @@ int main()
 	SetTargetFPS(TARGET_FPS);
 
 	Vector2 player_pos = { player->x, player->y};
-	const float player_speed = 0.02;
 
 	RenderTexture2D map_texture = LoadRenderTexture(SCREEN_WIDTH, SCREEN_HEIGHT);
 
@@ -111,6 +110,7 @@ int main()
 					pause = !pause;
 				}
 				if (!pause) {
+					DrawTextureRec(map_texture.texture,  (Rectangle){ 0, 0, (float)map_texture.texture.width, -(float)map_texture.texture.height }, (Vector2){ 0, 0 }, WHITE);	
 					handlePlayerMovement(player);
 					if (player->x >= (GetScreenWidth() - player->width)) player->x -= 0.02;
 					if (player->y >= (GetScreenHeight() - player->height)) player->y -= 0.02;
@@ -122,7 +122,6 @@ int main()
 						printf("Colisao!!");
 					}
 					
-					DrawTextureRec(map_texture.texture,  (Rectangle){ 0, 0, (float)map_texture.texture.width, -(float)map_texture.texture.height }, (Vector2){ 0, 0 }, WHITE);	
 				
 
 				} else {
