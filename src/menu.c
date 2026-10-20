@@ -16,7 +16,7 @@ void drawMenu()
 
 void handleScreenSelection(int *current_screen)
 {
-	if (IsKeyDown(KEY_ONE)) *current_screen = GAMEPLAY;
-	if (IsKeyDown(KEY_TWO)) *current_screen = RANKING;
-	if (IsKeyDown(KEY_THREE)) *current_screen = QUIT;
+	if (IsKeyPressed(KEY_ONE)) *current_screen = GAMEPLAY;
+	if (IsKeyPressed(KEY_TWO)) *current_screen = RANKING;
+	if (IsKeyPressed(KEY_THREE)) *current_screen = QUIT;
 }

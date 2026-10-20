@@ -1,17 +1,13 @@
 #include <stdio.h>
 #include <raylib.h>
 #include <stdlib.h>
+#include <string.h>
 #include "game.h"
 #include "funcs.h"
 #include "resource_dir.h"	// utility header for SearchAndSetResourceDir
 
-#define SCREEN_WIDTH  800
-#define SCREEN_HEIGHT 450
-
-#define TARGET_FPS 60
-
-#define TAM_FONT 30
-#define TAM_FONT_BIG 60
+#define ENEMIES 2
+#define TAM_RANKING 10
 
 int main()
 {
@@ -21,7 +17,9 @@ int main()
 	
 	TraceLog(LOG_INFO, "%s", "INITIALIZED WINDOW");
 
-	Player *player = makePlayer(SCREEN_WIDTH / 2.0, SCREEN_HEIGHT / 2.0);
+	Vector2 playerSpawn = {SCREEN_WIDTH/2.0, SCREEN_HEIGHT/2.0};
+	Player *player = makePlayer(playerSpawn.x, playerSpawn.y);
+	player->can_climb = 1;
 	int quit = 0;
 	int pause = 0;
 
@@ -97,6 +95,23 @@ int main()
 	Rectangle playerRect = {player_pos.x, player_pos.y, SCREEN_WIDTH/map_res.x, SCREEN_HEIGHT/map_res.y};
 
 
+	Vector2 enemiesSpawn[ENEMIES] = {(Vector2){30,30}, (Vector2){130,270}};
+	Enemy *enemies[ENEMIES];
+	enemies[0] = makeEnemy(enemiesSpawn[0], (Vector2){20, 20}, 0.2);
+	enemies[1] = makeEnemy(enemiesSpawn[1], (Vector2){20, 20}, 0.2);
+
+	RankingItem* ranking = makeRanking(TAM_RANKING);
+	updateRanking(ranking, TAM_RANKING, 0, "jonatas", 2.3);
+	updateRanking(ranking, TAM_RANKING, 1, "mateus", 6.1);
+	updateRanking(ranking, TAM_RANKING, 2, "amanda", 6.2);
+	updateRanking(ranking, TAM_RANKING, 3, "bruno", 4.3);
+	updateRanking(ranking, TAM_RANKING, 4, "otavio", 12.7);
+	updateRanking(ranking, TAM_RANKING, 5, "lucas", 8.7);
+	updateRanking(ranking, TAM_RANKING, 6, "ronaldo", 1.7);
+	updateRanking(ranking, TAM_RANKING, 7, "viviane", 0.7);
+	updateRanking(ranking, TAM_RANKING, 8, "fernanda", 4.2);
+	updateRanking(ranking, TAM_RANKING, 9, "joane", 1.8);
+
 	while (!quit && !WindowShouldClose()) {
 		BeginDrawing();
 		ClearBackground(RAYWHITE);
@@ -106,7 +121,7 @@ int main()
 				drawMenu();
 				break;
 			case GAMEPLAY:
-				if (IsKeyPressed(KEY_SPACE)) {
+				if (IsKeyPressed(KEY_TAB)) {
 					pause = !pause;
 				}
 				if (!pause) {
@@ -121,14 +136,44 @@ int main()
 					if (CheckCollisionRecs(playerRect, rects[0])){
 						printf("Colisao!!");
 					}
-					
-				
 
+					for (int i = 0; i < ENEMIES; i++) {
+						drawEnemy(enemies[i]);
+						walkEnemy(enemies[i]);
+						Rectangle _playerRect = {player->x, player->y, player->width, player->height};
+						Rectangle enemyRect = {enemies[i]->pos.x, enemies[i]->pos.y, enemies[i]->size.x, enemies[i]->size.y};
+						if (CheckCollisionRecs(_playerRect, enemyRect)) {
+							current_screen = ENDING;
+						}
+					}
+					
 				} else {
-					char pause_msg[] = "GAME PAUSED";
+					char pause_msg[] = "JOGO PAUSADO";
 					double pause_msg_size = MeasureText(pause_msg, TAM_FONT_BIG);
 					DrawText(pause_msg, (SCREEN_WIDTH - pause_msg_size) / 2.0, (SCREEN_HEIGHT)/2.0 - 100, TAM_FONT_BIG, MAROON);
 				}
+				break;
+			case ENDING:
+				player->x = playerSpawn.x;
+				player->y = playerSpawn.y;
+				for (int i = 0; i < ENEMIES; i++) {
+					enemies[i]->pos.x = enemiesSpawn[i].x;
+					enemies[i]->pos.y = enemiesSpawn[i].y;
+				}
+
+				drawEndingScreen();
+				handleEndingSelection(&current_screen);
+
+				break;
+			case RANKING:
+				for (int i = 0; i < TAM_RANKING; i++) {
+					char msg[100];
+					sprintf(msg, "%s:\t\t%.2fs", ranking[i].name, ranking[i].time);
+					DrawText(msg, 20, i * 30, TAM_FONT, MAROON);
+				}
+				char *voltar_msg = "APERTE ESPACO PARA VOLTAR";
+				DrawText(voltar_msg, (SCREEN_WIDTH - MeasureText(voltar_msg, TAM_FONT))/2, SCREEN_HEIGHT - 50, TAM_FONT, MAROON);
+				if (IsKeyPressed(KEY_SPACE)) current_screen = TITLE;
 				break;
 			case QUIT:
 				quit = 1;
@@ -137,6 +182,9 @@ int main()
 		EndDrawing();
 	}
 	free(player);
+	for (int i = 0; i < ENEMIES; i++) {
+		free(enemies[i]);
+	}
 
 	CloseWindow();
 
