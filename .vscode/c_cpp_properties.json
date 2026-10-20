@@ -3,8 +3,10 @@
         {
             "name": "Win32",
             "includePath": [
-                "${workspaceFolder}/build/external/raylib-master/src/**",
+                "${workspaceFolder}/include/**",
+                "${workspaceFolder}/lib/**",
                 "${workspaceFolder}/src/**"
+
             ],
             "defines": [
                 "_DEBUG",
@@ -20,7 +22,8 @@
         {
             "name": "Mac",
             "includePath": [
-                "${workspaceFolder}/build/external/raylib-master/src/**",
+                "${workspaceFolder}/include/**",
+                "${workspaceFolder}/lib/**",
                 "${workspaceFolder}/src/**"
             ],
             "defines": [
@@ -41,7 +44,8 @@
         {
             "name": "Linux",
             "includePath": [
-                "${workspaceFolder}/build/external/raylib-master/src/**",
+                "${workspaceFolder}/include/**",
+                "${workspaceFolder}/lib/**",
                 "${workspaceFolder}/src/**"
             ],
             "defines": [

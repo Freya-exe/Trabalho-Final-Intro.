@@ -1,84 +1,75 @@
-/*
-Raylib example file.
-This is an example main file for a simple raylib project.
-Use this as a starting point or replace it with your code.
-
-by Jeffery Myers is marked with CC0 1.0. To view a copy of this license, visit https://creativecommons.org/publicdomain/zero/1.0/
-
-*/
-
-#include "raylib.h"
-#include "funcs.h"
-#include "resource_dir.h"	// utility header for SearchAndSetResourceDir
-
-#include <stdio.h>
+#include <raylib.h>
+#include "resource_dir.h"
+#include "game.h"
 
 #define SCREEN_WIDTH 900
 #define SCREEN_HEIGHT 900
 
+#define TAM_FONT 30
+#define TAM_FONT_BIG 60
+
 int main ()
 {
-	
-	char **map;
- 
-	Vector2 map_res;
-
-	map = map_read();
-
-	map_res = get_map_res();
 
 	// Tell the window to use vsync and work on high DPI displays
 	SetConfigFlags(FLAG_VSYNC_HINT | FLAG_WINDOW_HIGHDPI);
 
 	// Create the window and OpenGL context
-	InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Hello Raylib");
+	InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Donkey Kong");
+
+	TraceLog(LOG_INFO, "%s", "INITIALIZED WINDOW");
 
 	// Utility function from resource_dir.h to find the resources folder and set it as the current working directory so we can load from it
 	SearchAndSetResourceDir("resources");
 	
 	SetTargetFPS(120);
 
-	Vector2 player_pos = { (float)SCREEN_WIDTH / 2, (float)SCREEN_HEIGHT / 2};
-	const float player_speed = 200;
+	int current_screen = TITLE;
+	int quit = 0;
+	int pause = 0;
+
+	Map* map = read_map("map1.txt");
+
+	Player *player = makePlayer(map->spawn_pos.x, map->spawn_pos.x);
 
 	RenderTexture2D map_texture = LoadRenderTexture(SCREEN_WIDTH, SCREEN_HEIGHT);
 
 	BeginTextureMode(map_texture);
 		ClearBackground(BLACK);
 
-		for (int y = 0; y < map_res.y; y++){
-					for (int x = 0; x < map_res.x; x++){
+		for (int y = 0; y < map->resolution.y; y++){
+					for (int x = 0; x < map->resolution.x; x++){
 
-						char tile = map[y][x];
+						char tile = map->tiles[y][x];
 
 						switch (tile)
 						{
 						case 'z':
-							DrawRectangle(x * (SCREEN_WIDTH / map_res.x), y * (SCREEN_HEIGHT / map_res.y), (SCREEN_WIDTH / map_res.x), (SCREEN_HEIGHT / map_res.y), BLUE);
+							DrawRectangle(x * (SCREEN_WIDTH / map->resolution.x), y * (SCREEN_HEIGHT / map->resolution.y), (SCREEN_WIDTH / map->resolution.x), (SCREEN_HEIGHT / map->resolution.y), BLUE);
 							break;
 
 						case 'e':
-							DrawRectangle(x * (SCREEN_WIDTH / map_res.x), y * (SCREEN_HEIGHT / map_res.y), (SCREEN_WIDTH / map_res.x), (SCREEN_HEIGHT / map_res.y), RED);
+							DrawRectangle(x * (SCREEN_WIDTH / map->resolution.x), y * (SCREEN_HEIGHT / map->resolution.y), (SCREEN_WIDTH / map->resolution.x), (SCREEN_HEIGHT / map->resolution.y), RED);
 							break;
 
 						case 's':
-							DrawRectangle(x * (SCREEN_WIDTH / map_res.x), y * (SCREEN_HEIGHT / map_res.y), (SCREEN_WIDTH / map_res.x), (SCREEN_HEIGHT / map_res.y), ORANGE);
+							DrawRectangle(x * (SCREEN_WIDTH / map->resolution.x), y * (SCREEN_HEIGHT / map->resolution.y), (SCREEN_WIDTH / map->resolution.x), (SCREEN_HEIGHT / map->resolution.y), ORANGE);
 							break;
 
 						case 'h':
-							DrawRectangle(x * (SCREEN_WIDTH / map_res.x), y * (SCREEN_HEIGHT / map_res.y), (SCREEN_WIDTH / map_res.x), (SCREEN_HEIGHT / map_res.y), YELLOW);
+							DrawRectangle(x * (SCREEN_WIDTH / map->resolution.x), y * (SCREEN_HEIGHT / map->resolution.y), (SCREEN_WIDTH / map->resolution.x), (SCREEN_HEIGHT / map->resolution.y), YELLOW);
 							break;
 						
 						case 'd':
-							DrawRectangle(x * (SCREEN_WIDTH / map_res.x), y * (SCREEN_HEIGHT / map_res.y), (SCREEN_WIDTH / map_res.x), (SCREEN_HEIGHT / map_res.y), ORANGE);
+							DrawRectangle(x * (SCREEN_WIDTH / map->resolution.x), y * (SCREEN_HEIGHT / map->resolution.y), (SCREEN_WIDTH / map->resolution.x), (SCREEN_HEIGHT / map->resolution.y), ORANGE);
 							break;
 
 						case 'f':
-							DrawRectangle(x * (SCREEN_WIDTH / map_res.x), y * (SCREEN_HEIGHT / map_res.y), (SCREEN_WIDTH / map_res.x), (SCREEN_HEIGHT / map_res.y), BROWN);
+							DrawRectangle(x * (SCREEN_WIDTH / map->resolution.x), y * (SCREEN_HEIGHT / map->resolution.y), (SCREEN_WIDTH / map->resolution.x), (SCREEN_HEIGHT / map->resolution.y), BROWN);
 							break;
 						
 						case 'p':
-							DrawRectangle(x * (SCREEN_WIDTH / map_res.x), y * (SCREEN_HEIGHT / map_res.y), (SCREEN_WIDTH / map_res.x), (SCREEN_HEIGHT / map_res.y), PINK);
+							DrawRectangle(x * (SCREEN_WIDTH / map->resolution.x), y * (SCREEN_HEIGHT / map->resolution.y), (SCREEN_WIDTH / map->resolution.x), (SCREEN_HEIGHT / map->resolution.y), PINK);
 							break;
 
 						default:
@@ -90,36 +81,54 @@ int main ()
 
 	EndTextureMode();
 
-	Rectangle* rects = create_collisions(map, (Vector2){SCREEN_WIDTH / map_res.x, SCREEN_HEIGHT/map_res.y});
-
-	Rectangle player = {player_pos.x, player_pos.y, SCREEN_WIDTH/map_res.x, SCREEN_HEIGHT/map_res.y};
-
 	// game loop
-	while (!WindowShouldClose())		// run the loop until the user presses ESCAPE or presses the Close button on the window
+	while (!quit && !WindowShouldClose())		// run the loop until the user presses ESCAPE or presses the Close button on the window
 	{
-		
 		
 		float delta_time = GetFrameTime();
 
-
-		if (IsKeyDown(KEY_RIGHT)) player.x += player_speed * delta_time;
-		if (IsKeyDown(KEY_LEFT)) player.x -= player_speed * delta_time;
-		if (IsKeyDown(KEY_UP)) player.y -= player_speed * delta_time;
-		if (IsKeyDown(KEY_DOWN)) player.y += player_speed * delta_time;
-
-		if (CheckCollisionRecs(player, rects[0])){
-			printf("Colisao!!");
-		}
-		
 		// drawing
 		BeginDrawing();
 
 		// Setup the back buffer for drawing (clear color and depth buffers)
-		ClearBackground(BLACK);
+		ClearBackground(RAYWHITE);
 
-		DrawTextureRec(map_texture.texture,  (Rectangle){ 0, 0, (float)map_texture.texture.width, -(float)map_texture.texture.height }, (Vector2){ 0, 0 }, WHITE);	
+		switch (current_screen) {
+			case TITLE:
+				handleScreenSelection(&current_screen);
+				drawMenu();
+				break;
+			case GAMEPLAY:
+				if (IsKeyPressed(KEY_SPACE)) {
+					pause = !pause;
+				}
+				if (!pause) {
+					DrawTextureRec(map_texture.texture,  (Rectangle){ 0, 0, (float)map_texture.texture.width, -(float)map_texture.texture.height }, (Vector2){ 0, 0 }, WHITE);	
+					handlePlayerMovement(player);
+					if (player->x >= (GetScreenWidth() - player->width)) player->x -= 0.02;
+					if (player->y >= (GetScreenHeight() - player->height)) player->y -= 0.02;
+					if (player->x <= player->width) player->x += 0.02;
+					if (player->y <= player->height) player->y += 0.02;
+					drawPlayer(*player);
 
-		DrawRectangleRec(player, PINK);
+					/*
+					if (CheckCollisionRecs(playerRect, rects[0])){
+						printf("Colisao!!");
+					}
+					*/
+					
+				
+
+				} else {
+					char pause_msg[] = "GAME PAUSED";
+					double pause_msg_size = MeasureText(pause_msg, TAM_FONT_BIG);
+					DrawText(pause_msg, (SCREEN_WIDTH - pause_msg_size) / 2.0, (SCREEN_HEIGHT)/2.0 - 100, TAM_FONT_BIG, MAROON);
+				}
+				break;
+			case QUIT:
+				quit = 1;
+				break;
+		}
 	
 		// end the frame and get ready for the next one  (display frame, poll input, etc...)
 		EndDrawing();
