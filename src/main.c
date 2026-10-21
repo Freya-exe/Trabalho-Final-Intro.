@@ -111,6 +111,7 @@ int main()
 	updateRanking(ranking, TAM_RANKING, 7, "viviane", 0.7);
 	updateRanking(ranking, TAM_RANKING, 8, "fernanda", 4.2);
 	updateRanking(ranking, TAM_RANKING, 9, "joane", 1.8);
+	sortRanking(ranking, TAM_RANKING);
 
 	while (!quit && !WindowShouldClose()) {
 		BeginDrawing();

@@ -51,4 +51,5 @@ void drawEndingScreen();
 void handleEndingSelection(int *current_screen);
 RankingItem *makeRanking(int n);
 void updateRanking(RankingItem *r, int n, int index, char *name, double time);
+void sortRanking(RankingItem *r, int n);
 #endif

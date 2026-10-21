@@ -6,7 +6,16 @@
 
 int comp(const void *a, const void*b)
 {
-	return (*(int*)a-*(int*)b);
+	const RankingItem *ra = a;
+	const RankingItem *rb = b;
+
+	if (ra->time > rb->time) {
+		return 1;
+	} else if (ra->time < rb->time) {
+		return -1;
+	} else {
+		return 0;
+	}
 }
 
 RankingItem *makeRanking(int n)
@@ -21,22 +30,11 @@ RankingItem *makeRanking(int n)
 
 void sortRanking(RankingItem *r, int n)
 {
-	int times[n];
-	for (int i = 0; i < n; i++) {
-		times[i] = r[i].time;
-	}
-	qsort(times, n, sizeof(int), comp);
-	int j = 0;
-	for (int i = 0; i < n; i++) {
-		if (r[i].time == times[i]) {
-			r[j++] = r[i];
-		}
-	}
+	qsort(r, n, sizeof(RankingItem), comp);
 }
 
 void updateRanking(RankingItem *r, int n, int index, char *name, double time)
 {
 	strcpy(r[index].name, name);
 	r[index].time = time;
-	//sortRanking(r, n);
 }
