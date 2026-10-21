@@ -1,6 +1,7 @@
 #include <raylib.h>
 #include "resource_dir.h"
 #include "game.h"
+#include <stdio.h>
 
 #define SCREEN_WIDTH 900
 #define SCREEN_HEIGHT 900
@@ -30,11 +31,14 @@ int main ()
 
 	Map* map = read_map("map1.txt");
 
-	Player *player = makePlayer(map->spawn_pos.x, map->spawn_pos.x);
+	int tile_size = SCREEN_WIDTH / map->resolution.x;
+
+	Player *player = makePlayer(map->spawn_pos.x, map->spawn_pos.y, tile_size);
 
 	RenderTexture2D map_texture = LoadRenderTexture(SCREEN_WIDTH, SCREEN_HEIGHT);
 
 	BeginTextureMode(map_texture);
+
 		ClearBackground(BLACK);
 
 		for (int y = 0; y < map->resolution.y; y++){
@@ -45,31 +49,31 @@ int main ()
 						switch (tile)
 						{
 						case 'z':
-							DrawRectangle(x * (SCREEN_WIDTH / map->resolution.x), y * (SCREEN_HEIGHT / map->resolution.y), (SCREEN_WIDTH / map->resolution.x), (SCREEN_HEIGHT / map->resolution.y), BLUE);
+							DrawRectangle(x * tile_size, y * (SCREEN_HEIGHT / map->resolution.y), tile_size, (SCREEN_HEIGHT / map->resolution.y), BLUE);
 							break;
 
 						case 'e':
-							DrawRectangle(x * (SCREEN_WIDTH / map->resolution.x), y * (SCREEN_HEIGHT / map->resolution.y), (SCREEN_WIDTH / map->resolution.x), (SCREEN_HEIGHT / map->resolution.y), RED);
+							DrawRectangle(x * tile_size, y * (SCREEN_HEIGHT / map->resolution.y), tile_size, (SCREEN_HEIGHT / map->resolution.y), RED);
 							break;
 
 						case 's':
-							DrawRectangle(x * (SCREEN_WIDTH / map->resolution.x), y * (SCREEN_HEIGHT / map->resolution.y), (SCREEN_WIDTH / map->resolution.x), (SCREEN_HEIGHT / map->resolution.y), ORANGE);
+							DrawRectangle(x * tile_size, y * (SCREEN_HEIGHT / map->resolution.y), tile_size, (SCREEN_HEIGHT / map->resolution.y), ORANGE);
 							break;
 
 						case 'h':
-							DrawRectangle(x * (SCREEN_WIDTH / map->resolution.x), y * (SCREEN_HEIGHT / map->resolution.y), (SCREEN_WIDTH / map->resolution.x), (SCREEN_HEIGHT / map->resolution.y), YELLOW);
+							DrawRectangle(x * tile_size, y * (SCREEN_HEIGHT / map->resolution.y), tile_size, (SCREEN_HEIGHT / map->resolution.y), YELLOW);
 							break;
 						
 						case 'd':
-							DrawRectangle(x * (SCREEN_WIDTH / map->resolution.x), y * (SCREEN_HEIGHT / map->resolution.y), (SCREEN_WIDTH / map->resolution.x), (SCREEN_HEIGHT / map->resolution.y), ORANGE);
+							DrawRectangle(x * tile_size, y * (SCREEN_HEIGHT / map->resolution.y), tile_size, (SCREEN_HEIGHT / map->resolution.y), ORANGE);
 							break;
 
 						case 'f':
-							DrawRectangle(x * (SCREEN_WIDTH / map->resolution.x), y * (SCREEN_HEIGHT / map->resolution.y), (SCREEN_WIDTH / map->resolution.x), (SCREEN_HEIGHT / map->resolution.y), BROWN);
+							DrawRectangle(x * tile_size, y * (SCREEN_HEIGHT / map->resolution.y), tile_size, (SCREEN_HEIGHT / map->resolution.y), BROWN);
 							break;
 						
 						case 'p':
-							DrawRectangle(x * (SCREEN_WIDTH / map->resolution.x), y * (SCREEN_HEIGHT / map->resolution.y), (SCREEN_WIDTH / map->resolution.x), (SCREEN_HEIGHT / map->resolution.y), PINK);
+							DrawRectangle(x * tile_size, y * (SCREEN_HEIGHT / map->resolution.y), tile_size, (SCREEN_HEIGHT / map->resolution.y), PINK);
 							break;
 
 						default:
@@ -91,7 +95,7 @@ int main ()
 		BeginDrawing();
 
 		// Setup the back buffer for drawing (clear color and depth buffers)
-		ClearBackground(RAYWHITE);
+		ClearBackground(BLACK);
 
 		switch (current_screen) {
 			case TITLE:
@@ -103,21 +107,12 @@ int main ()
 					pause = !pause;
 				}
 				if (!pause) {
-					DrawTextureRec(map_texture.texture,  (Rectangle){ 0, 0, (float)map_texture.texture.width, -(float)map_texture.texture.height }, (Vector2){ 0, 0 }, WHITE);	
-					handlePlayerMovement(player);
-					if (player->x >= (GetScreenWidth() - player->width)) player->x -= 0.02;
-					if (player->y >= (GetScreenHeight() - player->height)) player->y -= 0.02;
-					if (player->x <= player->width) player->x += 0.02;
-					if (player->y <= player->height) player->y += 0.02;
-					drawPlayer(*player);
-
-					/*
-					if (CheckCollisionRecs(playerRect, rects[0])){
-						printf("Colisao!!");
-					}
-					*/
 					
-				
+					DrawTextureRec(map_texture.texture,  (Rectangle){ 0, 0, (float)map_texture.texture.width, -(float)map_texture.texture.height }, (Vector2){ 0, 0 }, WHITE);	
+					
+					handlePlayerMovement(player, map, delta_time);
+
+					drawPlayer(*player);				
 
 				} else {
 					char pause_msg[] = "GAME PAUSED";

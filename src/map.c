@@ -65,8 +65,6 @@ Map *read_map(char* map_path){
 
             map->tiles[y][x] = character;
 
-            printf("Char [%d][%d]: %c\n", y, x, map->tiles[y][x]);
-
         }
     }     
 
@@ -94,8 +92,6 @@ Map *read_map(char* map_path){
                 sizes[rect_count].x = rect_size;
                 sizes[rect_count].y = 1;
 
-                //printf("Rect[%d]\n", rect_count);
-
                 rect_count++;
                 rect_size = 0;
 
@@ -104,20 +100,29 @@ Map *read_map(char* map_path){
         }
     }
 
-    map->collisions = (Rectangle*)malloc(rect_count * sizeof(Rectangle));
+    int screen_width = GetScreenWidth();
 
-        for (int i = 0; i < rect_count; i++){
+    float tile_size = screen_width / map->resolution.x;
+
+    map->collisions_quantity = rect_count;
+
+    map->collisions = (Rectangle*)malloc(map->collisions_quantity * sizeof(Rectangle));
+
+        for (int i = 0; i < map->collisions_quantity; i++){
 
             map->collisions[i] = (Rectangle){
-            (float)positions[i].x,
-            (float)positions[i].y,
-            (float)sizes[i].x,
-            (float)sizes[i].y
+            (float)positions[i].x * tile_size,
+            (float)positions[i].y * tile_size,
+            (float)sizes[i].x * tile_size,
+            (float)sizes[i].y * tile_size
         };
-
-        
-
+            
+        //printf("props[%d]: { %.2f, %.2f, %.2f, %.2f }\n", i, positions[i].x, positions[i].y, sizes[i].x, sizes[i].y);
+        //printf("Rect[%d]: { %.2f, %.2f, %.2f, %.2f }\n", i, map->collisions[i].x, map->collisions[i].y, map->collisions[i].width, map->collisions[i].height);
+    
     }
+
+
 
     return map;
 }

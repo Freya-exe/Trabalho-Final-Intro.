@@ -3,15 +3,16 @@
 #ifndef GAME_H
 #define GAME_H
 typedef struct player {
-	double x;
-	double y;
-	double width;
-	double height;
+	float x;
+	float y;
+	float size;
 	Vector2 velocity;
 	int can_climb;
+	Rectangle hitbox;
 } Player;
 
 typedef struct map {
+	int collisions_quantity;
     char** tiles;
     Vector2 resolution;
     Vector2 spawn_pos;
@@ -29,10 +30,10 @@ enum {
 
 void drawPlayer(Player p);
 void drawMenu();
-void handlePlayerMovement(Player *p);
+void handlePlayerMovement(Player *p, Map *map, float delta_time);
 void handleScreenSelection(int *current_screen);
 
-Player *makePlayer(double x, double y);
+Player *makePlayer(float x, float y, float size);
 Map *read_map(char* map_path);
 
 #endif
