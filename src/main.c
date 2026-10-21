@@ -101,6 +101,7 @@ int main()
 	enemies[1] = makeEnemy(enemiesSpawn[1], (Vector2){20, 20}, 0.2);
 
 	RankingItem* ranking = makeRanking(TAM_RANKING);
+	/*
 	updateRanking(ranking, TAM_RANKING, 0, "jonatas", 2.3);
 	updateRanking(ranking, TAM_RANKING, 1, "mateus", 6.1);
 	updateRanking(ranking, TAM_RANKING, 2, "amanda", 6.2);
@@ -112,6 +113,9 @@ int main()
 	updateRanking(ranking, TAM_RANKING, 8, "fernanda", 4.2);
 	updateRanking(ranking, TAM_RANKING, 9, "joane", 1.8);
 	sortRanking(ranking, TAM_RANKING);
+	writeRanking(ranking, TAM_RANKING);
+	*/
+	readRanking(ranking, TAM_RANKING);
 
 	while (!quit && !WindowShouldClose()) {
 		BeginDrawing();

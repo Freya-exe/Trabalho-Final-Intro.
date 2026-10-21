@@ -1,4 +1,5 @@
 #include <raylib.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include "game.h"
@@ -37,4 +38,27 @@ void updateRanking(RankingItem *r, int n, int index, char *name, double time)
 {
 	strcpy(r[index].name, name);
 	r[index].time = time;
+}
+
+void writeRanking(RankingItem *r, int n) 
+{
+	FILE *fd = fopen("ranking.bin", "wb");
+	if (!fd) {
+		TraceLog(LOG_ERROR, "Error: could not write ranking");
+		return;
+	}
+
+	fwrite(r, n, sizeof(RankingItem), fd);
+	fclose(fd);
+}
+
+void readRanking(RankingItem *r, int n)
+{
+	FILE *fd = fopen("ranking.bin", "rb");
+	if (!fd) {
+		TraceLog(LOG_ERROR, "Error: could not read ranking");
+		return;
+	}
+	fread(r, n, sizeof(RankingItem), fd);
+	fclose(fd);
 }
