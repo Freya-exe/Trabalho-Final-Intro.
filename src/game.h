@@ -31,6 +31,15 @@ typedef struct ranking_item {
 	double time;
 } RankingItem;
 
+typedef struct input_box {
+	Rectangle box;
+	int mouseOnText;
+	char *text;
+	int maxText;
+	int letterCount;
+	int done;
+} InputBox;
+
 enum {
 	TITLE = 0,
 	GAMEPLAY,
@@ -54,4 +63,7 @@ void updateRanking(RankingItem *r, int n, int index, char *name, double time);
 void sortRanking(RankingItem *r, int n);
 void writeRanking(RankingItem *r, int n);
 void readRanking(RankingItem *r, int n);
+InputBox *makeInputBox(double x, double y, double width, double height, int maxText);
+void checkInput(InputBox *inputBox);
+void drawInputBox(InputBox *inputBox);
 #endif

@@ -2,6 +2,7 @@
 #include <raylib.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include "game.h"
 #include "funcs.h"
 #include "resource_dir.h"	// utility header for SearchAndSetResourceDir
@@ -17,12 +18,15 @@ int main()
 	
 	TraceLog(LOG_INFO, "%s", "INITIALIZED WINDOW");
 
+	double current_time = 0;
+
 	Vector2 playerSpawn = {SCREEN_WIDTH/2.0, SCREEN_HEIGHT/2.0};
 	Player *player = makePlayer(playerSpawn.x, playerSpawn.y);
 	player->can_climb = 1;
 	int quit = 0;
 	int pause = 0;
 
+	InputBox *inputBox = makeInputBox(150, 150, 500, 60, 20);
 	char **map;
  
 	Vector2 map_res;
@@ -122,6 +126,15 @@ int main()
 		ClearBackground(RAYWHITE);
 		switch (current_screen) {
 			case TITLE:
+				// reset positions 
+				pause = 0;
+				player->x = playerSpawn.x;
+				player->y = playerSpawn.y;
+				for (int i = 0; i < ENEMIES; i++) {
+					enemies[i]->pos.x = enemiesSpawn[i].x;
+					enemies[i]->pos.y = enemiesSpawn[i].y;
+				}
+				// handle menu
 				handleScreenSelection(&current_screen);
 				drawMenu();
 				break;
@@ -130,6 +143,7 @@ int main()
 					pause = !pause;
 				}
 				if (!pause) {
+					current_time = GetTime();
 					DrawTextureRec(map_texture.texture,  (Rectangle){ 0, 0, (float)map_texture.texture.width, -(float)map_texture.texture.height }, (Vector2){ 0, 0 }, WHITE);	
 					handlePlayerMovement(player);
 					if (player->x >= (GetScreenWidth() - player->width)) player->x -= 0.02;
@@ -149,6 +163,9 @@ int main()
 						Rectangle enemyRect = {enemies[i]->pos.x, enemies[i]->pos.y, enemies[i]->size.x, enemies[i]->size.y};
 						if (CheckCollisionRecs(_playerRect, enemyRect)) {
 							current_screen = ENDING;
+							inputBox->done = 0;
+							strcpy(inputBox->text, "");
+							inputBox->letterCount = 0;
 						}
 					}
 					
@@ -156,9 +173,18 @@ int main()
 					char pause_msg[] = "JOGO PAUSADO";
 					double pause_msg_size = MeasureText(pause_msg, TAM_FONT_BIG);
 					DrawText(pause_msg, (SCREEN_WIDTH - pause_msg_size) / 2.0, (SCREEN_HEIGHT)/2.0 - 100, TAM_FONT_BIG, MAROON);
+					DrawText("[1] Continuar  [2] Menu  [3] Sair", (SCREEN_WIDTH - pause_msg_size) / 2.0, (SCREEN_HEIGHT)/2.0 - 20, TAM_FONT, MAROON);
+					if (IsKeyPressed(KEY_ONE)) pause = 0;
+					if (IsKeyPressed(KEY_TWO)) current_screen = TITLE;
+					if (IsKeyPressed(KEY_THREE)) current_screen = QUIT;
 				}
 				break;
 			case ENDING:
+				// count time to finish the game
+				double end_time = GetTime();
+				double time_interval = end_time - current_time;
+				
+				// reset positions
 				player->x = playerSpawn.x;
 				player->y = playerSpawn.y;
 				for (int i = 0; i < ENEMIES; i++) {
@@ -166,8 +192,19 @@ int main()
 					enemies[i]->pos.y = enemiesSpawn[i].y;
 				}
 
-				drawEndingScreen();
-				handleEndingSelection(&current_screen);
+				// handle input box
+				if (inputBox->done == 0) {
+					DrawText("Novo recorde! Digite o seu nome:", 20, 20, TAM_FONT, MAROON);
+					checkInput(inputBox);
+					drawInputBox(inputBox);
+					DrawText("Aperte [ENTER] para enviar o seu nome", 20, 400, TAM_FONT, MAROON);
+				}
+
+				if (inputBox->done == 1) {
+					drawEndingScreen();
+					handleEndingSelection(&current_screen);
+					updateRanking(ranking, TAM_RANKING, 0, inputBox->text, time_interval);
+				}
 
 				break;
 			case RANKING:
@@ -190,6 +227,8 @@ int main()
 	for (int i = 0; i < ENEMIES; i++) {
 		free(enemies[i]);
 	}
+	free(inputBox->text);
+	free(inputBox);
 
 	CloseWindow();
 
