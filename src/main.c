@@ -105,6 +105,7 @@ int main()
 	enemies[1] = makeEnemy(enemiesSpawn[1], (Vector2){20, 20}, 0.2);
 
 	RankingItem* ranking = makeRanking(TAM_RANKING);
+
 	/*
 	updateRanking(ranking, TAM_RANKING, 0, "jonatas", 2.3);
 	updateRanking(ranking, TAM_RANKING, 1, "mateus", 6.1);
@@ -119,15 +120,28 @@ int main()
 	sortRanking(ranking, TAM_RANKING);
 	writeRanking(ranking, TAM_RANKING);
 	*/
+	
 	readRanking(ranking, TAM_RANKING);
+	int updated_ranking = 0;
+	int empty_ranking_slots = 0;
+	for (int i = 0; i < TAM_RANKING; i++) {
+		if (strcmp(ranking[i].name, "[VAZIO]") == 0) {
+			empty_ranking_slots++;
+		}
+	}
 
 	while (!quit && !WindowShouldClose()) {
 		BeginDrawing();
 		ClearBackground(RAYWHITE);
 		switch (current_screen) {
 			case TITLE:
-				// reset positions 
+				//reset variables
 				pause = 0;
+				updated_ranking = 0;
+				inputBox->done = 0;
+				strcpy(inputBox->text, "");
+				inputBox->letterCount = 0;
+				// reset positions 
 				player->x = playerSpawn.x;
 				player->y = playerSpawn.y;
 				for (int i = 0; i < ENEMIES; i++) {
@@ -139,6 +153,12 @@ int main()
 				drawMenu();
 				break;
 			case GAMEPLAY:
+				//reset variables
+				updated_ranking = 0;
+				inputBox->done = 0;
+				strcpy(inputBox->text, "");
+				inputBox->letterCount = 0;
+				//pause
 				if (IsKeyPressed(KEY_TAB)) {
 					pause = !pause;
 				}
@@ -193,7 +213,7 @@ int main()
 				}
 
 				// handle input box
-				if (inputBox->done == 0) {
+				if (inputBox->done == 0 && (time_interval < ranking[TAM_RANKING - 1].time || empty_ranking_slots > 0)) {
 					DrawText("Novo recorde! Digite o seu nome:", 20, 20, TAM_FONT, MAROON);
 					checkInput(inputBox);
 					drawInputBox(inputBox);
@@ -201,13 +221,29 @@ int main()
 				}
 
 				if (inputBox->done == 1) {
+					sortRanking(ranking, TAM_RANKING);
 					drawEndingScreen();
 					handleEndingSelection(&current_screen);
-					updateRanking(ranking, TAM_RANKING, 0, inputBox->text, time_interval);
+					int to_update = -1;
+					for (int i = 0; i < TAM_RANKING; i++) {
+						if (strcmp(ranking[i].name, "[VAZIO]") == 0 && updated_ranking == 0) {
+							to_update = i;
+							updated_ranking = 1;
+							empty_ranking_slots--;
+						}
+					}
+					if (updated_ranking == 0) {
+						to_update = TAM_RANKING - 1;
+						updated_ranking = 1;
+					}
+					if (updated_ranking == 1 && to_update >= 0) {
+						updateRanking(ranking, TAM_RANKING, to_update, inputBox->text, time_interval);
+					}
 				}
 
 				break;
 			case RANKING:
+				sortRanking(ranking, TAM_RANKING);
 				for (int i = 0; i < TAM_RANKING; i++) {
 					char msg[100];
 					sprintf(msg, "%s:\t\t%.2fs", ranking[i].name, ranking[i].time);
@@ -223,6 +259,7 @@ int main()
 		}
 		EndDrawing();
 	}
+	writeRanking(ranking, TAM_RANKING);
 	free(player);
 	for (int i = 0; i < ENEMIES; i++) {
 		free(enemies[i]);
